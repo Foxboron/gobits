@@ -1,6 +1,10 @@
 {
   "nick": "Gobits",
-  "server": "",
-  "port": "",
-  "channels": [""]
+  "networks": [
+    {
+      "server": "",
+      "port": "",
+      "channels": [""]
+    }
+  ]
 }

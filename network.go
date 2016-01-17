@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 )
 
 type cmd func(conn net.Conn, msg string, channel string)
@@ -78,7 +79,7 @@ func write(conn net.Conn, msg string) {
 	}
 }
 
-func connect(nick string, network string, port string, channels []string) {
+func connect(nick string, network string, port string, channels []string, wg sync.WaitGroup) {
 
 	log.SetFlags(log.Lshortfile)
 	conf := &tls.Config{
@@ -98,6 +99,7 @@ func connect(nick string, network string, port string, channels []string) {
 		for sig := range c {
 			println(sig)
 			conn.Close()
+			defer wg.Done()
 		}
 	}()
 

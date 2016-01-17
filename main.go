@@ -5,16 +5,13 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 )
 
 func main() {
 
-	addCmd("HYPE", func(conn net.Conn, msg string, channel string) {
-		write(conn, fmt.Sprintf("PRIVMSG %s :HYYYYPPPEEEE", channel))
-	})
+	register_cmds()
 
 	// Configs
 	config := get_config("./config")

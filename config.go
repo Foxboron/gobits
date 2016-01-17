@@ -8,12 +8,11 @@ import (
 )
 
 type jsonconfig struct {
-	Nick     string
-	Server   string
-	Port     string
-	Channels []string
-	// For later use
-	//Networks NetworksType
+	Nick   string
+	Server string
+	Port   string
+	//Channels []string
+	Networks []NetworksType
 }
 
 type NetworksType struct {
@@ -30,5 +29,7 @@ func get_config(conf string) jsonconfig {
 	}
 	var config jsonconfig
 	json.Unmarshal(file, &config)
+	fmt.Printf("File error: %v\n", config)
+	fmt.Printf("%s", config.Networks[0])
 	return config
 }

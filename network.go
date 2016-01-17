@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bufio"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"log"
 	"net"
+	"os"
+	"os/signal"
 	"strings"
 )
 
@@ -59,7 +64,7 @@ func docmd(conn net.Conn, msg string, channel string) {
 		if err != nil {
 			println("Found no functions")
 		} else {
-			val(conn, msg, channel)
+			go val(conn, msg, channel)
 		}
 
 	}
@@ -74,4 +79,52 @@ func write(conn net.Conn, msg string) {
 }
 
 func connect(nick string, network string, port string, channels []string) {
+
+	log.SetFlags(log.Lshortfile)
+	conf := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%s", network, port), conf)
+	if err != nil {
+		println("Dial failed:", err.Error())
+		os.Exit(1)
+	}
+
+	// Shit idk
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			println(sig)
+			conn.Close()
+		}
+	}()
+
+	connbuf := bufio.NewReader(conn)
+	user_msg := fmt.Sprintf("USER %s %s %s :Go FTW", nick, nick, nick)
+	write(conn, user_msg)
+	nick_msg := fmt.Sprintf("NICK %s", nick)
+	write(conn, nick_msg)
+	for {
+
+		str, _, err := connbuf.ReadLine()
+
+		if err != nil {
+			println("Write to server failed:", err.Error())
+			os.Exit(1)
+		}
+
+		s := parse(string(str))
+		fmt.Printf("Got: %v\n", s)
+		if s["event"] == "PING" {
+			write(conn, fmt.Sprintf("PONG :%s", s["msg"]))
+		}
+		if s["event"] == "266" {
+			joinchannels(conn, channels)
+		}
+		if s["event"] == "PRIVMSG" {
+			docmd(conn, s["msg"], s["channel"])
+		}
+	}
 }

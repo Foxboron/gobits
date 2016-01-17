@@ -1,6 +1,6 @@
 {
   "nick": "Gobits",
-  "server": "irc.rizon.net",
-  "port": "6697",
-  "channels": ["#/g/punk"]
+  "server": "",
+  "port": "",
+  "channels": [""]
 }

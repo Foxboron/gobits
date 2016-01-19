@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -13,19 +12,81 @@ import (
 	"sync"
 )
 
-type cmd func(conn net.Conn, msg string, channel string)
-
-var _cmds = map[string]cmd{}
-
-func addCmd(name string, fn cmd) {
-	_cmds[name] = fn
+type NetworkInterface interface {
+	Connect()
+	Close()
+	Write()
+	Read()
+	JoinAll()
+	Join()
 }
 
-func getCmd(name string) (cmd, error) {
-	if val, ok := _cmds[name]; ok {
-		return val, nil
+type Channel struct {
+	name   string
+	joined bool
+}
+
+type Network struct {
+	connected  bool
+	server     string
+	channels   []Channel
+	port       string
+	buffer     bufio.Reader
+	connection net.Conn
+}
+
+type NetworksInterface interface {
+	ConnectAll()
+	CloseAll()
+}
+
+type Networks struct {
+	channels []Network
+}
+
+func (n Networks) ConnectAll() {
+}
+
+func (n Networks) CloseAll() {
+}
+
+func (n Network) Join(channel string) {
+}
+
+func (n Network) JoinAll() {
+}
+
+func (n Network) Connect() {
+	log.SetFlags(log.Lshortfile)
+	conf := &tls.Config{
+		InsecureSkipVerify: true,
 	}
-	return nil, errors.New("No cmd found")
+
+	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%s", n.server, n.port), conf)
+	if err != nil {
+		println("Dial failed:", err.Error())
+		os.Exit(1)
+	}
+	n.connection = conn
+	n.connected = true
+}
+
+func (n Network) Write(msg_type string, channel string, msg string) {
+	n.connection.Write([]byte(fmt.Sprintf("%s %s: %s", msg_type, channel, msg)))
+}
+
+func (n Network) Read() []byte {
+	connbuf := bufio.NewReader(n.connection)
+	str, _, err := connbuf.ReadLine()
+	if err != nil {
+		println("Read from server failed:", err.Error())
+		n.Close()
+	}
+	return str
+}
+
+func (n Network) Close() {
+	n.connection.Close()
 }
 
 func parse(msg string) map[string]string {

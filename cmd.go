@@ -2,11 +2,9 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"net"
 )
 
-type cmd func(conn net.Conn, msg string, channel string)
+type cmd func(msg string) string
 
 var _cmds = map[string]cmd{}
 
@@ -22,7 +20,7 @@ func getCmd(name string) (cmd, error) {
 }
 
 func register_cmds() {
-	addCmd("HYPE", func(conn net.Conn, msg string, channel string) {
-		write(conn, fmt.Sprintf("PRIVMSG %s :HYYYYPPPEEEE", channel))
+	addCmd("HYPE", func(msg string) string {
+		return "HYYYYPPPEEEE"
 	})
 }

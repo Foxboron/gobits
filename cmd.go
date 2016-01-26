@@ -19,7 +19,7 @@ func getCmd(name string) (cmd, error) {
 	return nil, errors.New("No cmd found")
 }
 
-func register_cmds() {
+func init() {
 	addCmd("HYPE", func(msg string) string {
 		return "HYYYYPPPEEEE"
 	})

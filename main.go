@@ -6,7 +6,6 @@ import (
 )
 
 func main() {
-	register_cmds()
 
 	config := get_config("./config")
 

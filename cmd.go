@@ -1,26 +1,45 @@
 package main
 
 import (
-	"errors"
+	"fmt"
+	"strings"
 )
 
-type cmd func(msg string) string
+type cmds func(msg string) cmd
+type cmd func(msg string)
 
-var _cmds = map[string]cmd{}
-
-func addCmd(name string, fn cmd) {
-	_cmds[name] = fn
+type CommandInterface interface {
+	DoCMD()
 }
 
-func getCmd(name string) (cmd, error) {
-	if val, ok := _cmds[name]; ok {
-		return val, nil
+type Command struct {
+	network Network
+	msg     map[string]string
+	cmds    map[string]cmd
+}
+
+func (c Command) WriteToChannel(msg string) {
+	c.network.Write(fmt.Sprintf("PRIVMSG %s :%s", c.msg["channel"], msg))
+}
+
+func (c Command) DoCMD() {
+	c.Register()
+	splitted := strings.Split(c.msg["msg"], " ")
+	if splitted[0] == "go" {
+		if _, ok := c.cmds[splitted[1]]; ok {
+			c.cmds[splitted[1]](c.msg["msg"])
+		}
 	}
-	return nil, errors.New("No cmd found")
 }
 
-func init() {
-	addCmd("HYPE", func(msg string) string {
-		return "HYYYYPPPEEEE"
-	})
+func (c Command) addCmd(name string, fn cmd) {
+	c.cmds[name] = fn
+}
+
+func (c Command) Hype(msg string) {
+	c.WriteToChannel("HYYYYYPPPEEEE")
+}
+
+func (c Command) Register() {
+	c.addCmd("HYPE", c.Hype)
 }

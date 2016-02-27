@@ -10,6 +10,30 @@ import (
 	"strings"
 )
 
+func parse(msg string) map[string]string {
+	splitted := strings.SplitN(msg, " :", 3)
+	userinfo := strings.Split(splitted[0], " ")
+	event := ""
+	channel := ""
+
+	fmt.Printf("Internal: %v\n", userinfo)
+	if len(userinfo) > 1 {
+		event = userinfo[1]
+		if len(userinfo) >= 3 {
+			channel = userinfo[2]
+		}
+	} else {
+		event = splitted[0]
+	}
+
+	info := map[string]string{
+		"msg":     splitted[len(splitted)-1],
+		"event":   event,
+		"channel": channel,
+	}
+	return info
+}
+
 type NetworkInterface interface {
 	Connect()
 	Close()
@@ -32,27 +56,6 @@ type Network struct {
 	port       string
 	buffer     *bufio.Reader
 	connection net.Conn
-}
-
-type NetworksInterface interface {
-	ConnectAll()
-	CloseAll()
-}
-
-type Networks struct {
-	servers []Network
-}
-
-func (n Networks) ConnectAll() {
-	for _, i := range n.servers {
-		go i.Connect()
-	}
-}
-
-func (n Networks) CloseAll() {
-	for _, i := range n.servers {
-		i.Close()
-	}
 }
 
 func (n Network) Join(channel Channel) {
@@ -98,7 +101,8 @@ func (n Network) Connect() {
 			n.JoinAll()
 		}
 		if s["event"] == "PRIVMSG" {
-			go docmd(n, s)
+			cmd := Command{network: n, msg: s, cmds: map[string]cmd{}}
+			go cmd.DoCMD()
 		}
 	}
 }
@@ -106,6 +110,7 @@ func (n Network) Connect() {
 func (n Network) Write(msg string) {
 	n.connection.Write([]byte(msg + "\n"))
 }
+
 func (n Network) Read() []byte {
 	str, _, err := n.buffer.ReadLine()
 	if err != nil {
@@ -119,40 +124,23 @@ func (n Network) Close() {
 	n.connection.Close()
 }
 
-func parse(msg string) map[string]string {
-	splitted := strings.SplitN(msg, " :", 3)
-	userinfo := strings.Split(splitted[0], " ")
-	event := ""
-	channel := ""
-
-	fmt.Printf("Internal: %v\n", userinfo)
-	if len(userinfo) > 1 {
-		event = userinfo[1]
-		if len(userinfo) >= 3 {
-			channel = userinfo[2]
-		}
-	} else {
-		event = splitted[0]
-	}
-
-	info := map[string]string{
-		"msg":     splitted[len(splitted)-1],
-		"event":   event,
-		"channel": channel,
-	}
-	return info
+type NetworksInterface interface {
+	ConnectAll()
+	CloseAll()
 }
 
-func docmd(n Network, m map[string]string) {
-	splitted := strings.Split(m["msg"], " ")
-	if splitted[0] == "go" {
-		val, err := getCmd(splitted[1])
-		if err != nil {
-			println("Found no functions")
-		} else {
-			msg := val(m["msg"])
-			n.Write(fmt.Sprintf("PRIVMSG %s :%s", m["channel"], msg))
-		}
+type Networks struct {
+	servers []Network
+}
 
+func (n Networks) ConnectAll() {
+	for _, i := range n.servers {
+		go i.Connect()
+	}
+}
+
+func (n Networks) CloseAll() {
+	for _, i := range n.servers {
+		i.Close()
 	}
 }

@@ -103,9 +103,29 @@ func (c Command) ReadQuote(msg string) {
 	}
 }
 
+func (c Command) Deadpool(msg string) {
+	c.WriteToChannel("https://i.imgur.com/CJfu35j.gif")
+}
+
+func (c Command) HeheJPG(msg string) {
+	c.WriteToChannel("https://iskrembilen.com/hehe.jpg")
+}
+
+func (c Command) HeheGIF(msg string) {
+	c.WriteToChannel("https://iskrembilen.com/hehe.gif")
+}
+
+func (c Command) HehePNG(msg string) {
+	c.WriteToChannel("https://iskrembilen.com/hehe.png")
+}
+
 func (c Command) Register() {
 	c.addCmd("HYPE", c.Hype)
 	c.addCmd("hackers", c.Hackers)
 	c.addCmd("add-quote", c.AddQuote)
 	c.addCmd("read-quote", c.ReadQuote)
+	c.addCmd("no", c.Deadpool)
+	c.addCmd("hehe-jpg", c.HeheJPG)
+	c.addCmd("hehe-gif", c.HeheGIF)
+	c.addCmd("hehe-png", c.HehePNG)
 }

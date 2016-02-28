@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"net/http"
 )
 
 type cmds func(msg string) cmd
@@ -119,6 +120,21 @@ func (c Command) HehePNG(msg string) {
 	c.WriteToChannel("https://iskrembilen.com/hehe.png")
 }
 
+func (c Command) Commit(msg string) {
+	res, err := http.Get("http://whatthecommit.com/index.txt")
+	if err != nil {
+	  fmt.Print(err)
+	}
+
+	commitMsg, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		fmt.Print(err)
+	} else {
+		c.WriteToChannel(fmt.Sprintf("%s", commitMsg));
+	}
+}
+
 func (c Command) Register() {
 	c.addCmd("HYPE", c.Hype)
 	c.addCmd("hackers", c.Hackers)
@@ -128,4 +144,5 @@ func (c Command) Register() {
 	c.addCmd("hehe-jpg", c.HeheJPG)
 	c.addCmd("hehe-gif", c.HeheGIF)
 	c.addCmd("hehe-png", c.HehePNG)
+	c.addCmd("commit", c.Commit)
 }

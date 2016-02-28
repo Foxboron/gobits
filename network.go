@@ -104,7 +104,7 @@ func (n Network) Connect() {
 			n.JoinAll()
 		}
 		if s["event"] == "PRIVMSG" {
-			cmd := Command{network: n, msg: s, cmds: map[string]cmd{}}
+			cmd := Command{network: n, msg: s, cmds: map[string]cmd{}, help: map[string]string{}}
 			go cmd.DoCMD()
 		}
 	}

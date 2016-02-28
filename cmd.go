@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"net/http"
 )
 
 type cmds func(msg string) cmd
@@ -21,6 +20,7 @@ type Command struct {
 	network Network
 	msg     map[string]string
 	cmds    map[string]cmd
+	help    map[string]string
 }
 
 func (c Command) WriteToChannel(msg string) {
@@ -36,13 +36,19 @@ func (c Command) DoCMD() {
 	splitted := strings.Split(c.msg["msg"], " ")
 	if splitted[0] == "go" {
 		if _, ok := c.cmds[splitted[1]]; ok {
-			c.cmds[splitted[1]](c.msg["msg"])
+			msg := strings.SplitN(c.msg["msg"], " ", 3)
+			if len(msg) >= 3 {
+				c.cmds[splitted[1]](msg[2])
+			} else {
+				c.cmds[splitted[1]]("")
+			}
 		}
 	}
 }
 
-func (c Command) addCmd(name string, fn cmd) {
+func (c Command) addCmd(name string, help string, fn cmd) {
 	c.cmds[name] = fn
+	c.help[name] = help
 }
 
 func (c Command) Hype(msg string) {
@@ -67,7 +73,6 @@ func (c Command) Hackers(msg string) {
 }
 
 func (c Command) AddQuote(msg string) {
-	msg = strings.SplitN(msg, " ", 3)[2]
 	f, err := os.OpenFile("./quotes", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		fmt.Print("Read error")
@@ -75,14 +80,13 @@ func (c Command) AddQuote(msg string) {
 
 	defer f.Close()
 
-	if _, err = f.WriteString(msg + "\n"); err != nil {
+	if _, err = f.WriteString("\n" + msg); err != nil {
 		fmt.Print("Read error")
 	}
 	c.WriteToNotice("Wrote quote!")
 }
 
 func (c Command) ReadQuote(msg string) {
-	msg = strings.SplitN(msg, " ", 3)[2]
 	slice, err := strconv.Atoi(msg)
 	if err != nil {
 		fmt.Println("Not and int")
@@ -120,29 +124,26 @@ func (c Command) HehePNG(msg string) {
 	c.WriteToChannel("https://iskrembilen.com/hehe.png")
 }
 
-func (c Command) Commit(msg string) {
-	res, err := http.Get("http://whatthecommit.com/index.txt")
-	if err != nil {
-	  fmt.Print(err)
-	}
-
-	commitMsg, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		fmt.Print(err)
+func (c Command) Help(msg string) {
+	ret := ""
+	if msg == "" {
+		for k := range c.help {
+			ret += k + " "
+		}
 	} else {
-		c.WriteToChannel(fmt.Sprintf("%s", commitMsg));
+		ret = msg + ": " + c.help[msg]
 	}
+	c.WriteToChannel(ret)
 }
 
 func (c Command) Register() {
-	c.addCmd("HYPE", c.Hype)
-	c.addCmd("hackers", c.Hackers)
-	c.addCmd("add-quote", c.AddQuote)
-	c.addCmd("read-quote", c.ReadQuote)
-	c.addCmd("no", c.Deadpool)
-	c.addCmd("hehe-jpg", c.HeheJPG)
-	c.addCmd("hehe-gif", c.HeheGIF)
-	c.addCmd("hehe-png", c.HehePNG)
-	c.addCmd("commit", c.Commit)
+	c.addCmd("HYPE", "GO LANG HYPE!", c.Hype)
+	c.addCmd("hackers", "Awesomesauce quotes", c.Hackers)
+	c.addCmd("add-quote", "Add a quote", c.AddQuote)
+	c.addCmd("read-quote", "Read a quote", c.ReadQuote)
+	c.addCmd("no", "Yeah no....", c.Deadpool)
+	c.addCmd("hehe-jpg", "ehehehehehe", c.HeheJPG)
+	c.addCmd("hehe-gif", "ehehehehe", c.HeheGIF)
+	c.addCmd("hehe-png", "eheheheh", c.HehePNG)
+	c.addCmd("help", "Get help!", c.Help)
 }

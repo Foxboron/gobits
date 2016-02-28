@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"math/rand"
 	"strings"
 )
 
@@ -40,6 +42,24 @@ func (c Command) Hype(msg string) {
 	c.WriteToChannel("HYYYYYPPPEEEE")
 }
 
+func randLineFromFile(msg string) string {
+	file, e := ioutil.ReadFile(msg)
+	if e != nil {
+		fmt.Printf("File error!")
+	}
+	lines := strings.Split(string(file), "\n")
+
+	length := len(lines)
+	r := rand.Intn(length)
+	defined := lines[r]
+	return string(defined)
+}
+
+func (c Command) Hackers(msg string) {
+	c.WriteToChannel(randLineFromFile("./hackers"))
+}
+
 func (c Command) Register() {
 	c.addCmd("HYPE", c.Hype)
+	c.addCmd("hackers", c.Hackers)
 }

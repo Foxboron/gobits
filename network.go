@@ -15,18 +15,21 @@ func parse(msg string) map[string]string {
 	userinfo := strings.Split(splitted[0], " ")
 	event := ""
 	channel := ""
+	user := ""
 
 	fmt.Printf("Internal: %v\n", userinfo)
 	if len(userinfo) > 1 {
 		event = userinfo[1]
 		if len(userinfo) >= 3 {
 			channel = userinfo[2]
+			user = strings.Trim(strings.Split(userinfo[0], "!")[0], ":")
 		}
 	} else {
 		event = splitted[0]
 	}
 
 	info := map[string]string{
+		"user":    user,
 		"msg":     splitted[len(splitted)-1],
 		"event":   event,
 		"channel": channel,
@@ -108,6 +111,7 @@ func (n Network) Connect() {
 }
 
 func (n Network) Write(msg string) {
+	fmt.Println("Wrote: " + msg)
 	n.connection.Write([]byte(msg + "\n"))
 }
 

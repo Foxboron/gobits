@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -124,6 +125,21 @@ func (c Command) HehePNG(msg string) {
 	c.WriteToChannel("https://iskrembilen.com/hehe.png")
 }
 
+func (c Command) Commit(msg string) {
+	res, err := http.Get("http://whatthecommit.com/index.txt")
+	if err != nil {
+		fmt.Print(err)
+	}
+
+	commitMsg, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		fmt.Print(err)
+	} else {
+		c.WriteToChannel(fmt.Sprintf("%s", commitMsg))
+	}
+}
+
 func (c Command) Help(msg string) {
 	ret := ""
 	if msg == "" {
@@ -145,5 +161,6 @@ func (c Command) Register() {
 	c.addCmd("hehe-jpg", "ehehehehehe", c.HeheJPG)
 	c.addCmd("hehe-gif", "ehehehehe", c.HeheGIF)
 	c.addCmd("hehe-png", "eheheheh", c.HehePNG)
+	c.addCmd("commit", "Random commit msg", c.Commit)
 	c.addCmd("help", "Get help!", c.Help)
 }
